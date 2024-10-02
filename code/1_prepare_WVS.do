@@ -1,4 +1,8 @@
 
+*-------------------------------------------------------------------------------
+*	PREPARING WBI GDP PP
+*
+*-------------------------------------------------------------------------------
 *Load data on GDP PP a US$ 2021
 import delimited "${rdata}\GDP_PPP\GDP_US15.csv", clear
 
@@ -11,6 +15,11 @@ keep iso gdp_1723 ln_gdp1723
 tempfile GDP
 save `GDP', replace 
 
+
+*-------------------------------------------------------------------------------
+*	PREPARING WVS7 DATA
+*
+*-------------------------------------------------------------------------------
 *Load WVS7
 use "${rdata}\WVS\wvs7\WVS_Cross-National_Wave_7_stata_v6_0.dta", clear
 
@@ -18,6 +27,24 @@ use "${rdata}\WVS\wvs7\WVS_Cross-National_Wave_7_stata_v6_0.dta", clear
 
 ren _all, low
 ren b_country_alpha iso
+
+*Globals per topic:
+gl trust "q65 q66 q69 q70 q71 q72 q73 q76"
+gl percep "q224 q225 q227 q229 q232"
+gl corrup "q113 q115"
+gl action "q221 q222"
+gl insec "q131 q132 q133 q134 q135 q136 q137 q138"
+gl labored "q142 q143"
+gl polviol "q192 q194"
+gl citcult "q177 q178 q179 q180 q181"
+gl polreg "q235 q236 q237 q238 q243 q245 q250 q251"
+gl allvars "${trust} ${percep} ${corrup} ${action} ${insec} ${labored} ${polviol} ${citcult} ${polreg} q252 q112"
+
+*Taking out outliers: 
+foreach var of global allvars{
+	summ `var', d
+	replace `var'=. if `var'>= r(p99) |  `var'<= r(p1)	
+}
 
 *-------------------------------------------------------------------------------
 *	TRUST IN INSTITUTIONS 
@@ -50,6 +77,8 @@ gl percep_inv "q224_inv q225_inv q227_inv q229_inv q232_inv"
 
 *DO THIS ONE: q112
 gl corrup "q113 q115"
+
+recode q252 q112 (-5 -4 -3 -2 -1 =.)
 
 *Inverting the scales so most is better 
 foreach var of global percep {
@@ -148,6 +177,14 @@ foreach var in index_trust index_percep index_corrup index_action index_insec in
 	egen z_`var'=std(`var')
 }
 
+*Capturing labels of the raw variables 
+gl allvars "${trust} ${percep} ${corrup} ${action} ${insec} ${labored} ${polviol} ${citcult} ${polreg} q252 q112"
+foreach var of global allvars {
+	local label_`var' : variable label `var'	
+	dis "`label_`var''"
+}
+
+*Collapsing data at the coutnry level (using population weights - pweights)
 collapse (mean) ${trust_inv} sum_trust_inv index_trust ${percep_inv} sum_percep_inv index_percep q252 ${corrup} sum_corrup index_corrup q112 ${action_inv} sum_action_inv index_action ${insec_inv} sum_insec_inv index_insec ${labored_inv} sum_labored_inv index_labored ${polviol} sum_polviol_inv index_polviol ${citcult} sum_citcult_inv index_citcult ${polreg} z_index_* [pw=pwght], by(iso)
 
 *-------------------------------------------------------------------------------
@@ -156,6 +193,16 @@ collapse (mean) ${trust_inv} sum_trust_inv index_trust ${percep_inv} sum_percep_
 merge 1:1 iso using `GDP', keep(1 3) nogen 
 
 *Labelling
+gl allvars_inv "${trust} ${percep} ${action} ${insec} ${labored}"
+foreach var of global allvars_inv{
+	la var `var'_inv "`label_`var''"
+}
+
+gl allvars_noinv "${corrup} ${polviol} ${citcult} ${polreg} q252 q112"
+foreach var of global allvars_noinv{
+	la var `var' "`label_`var''"
+}
+
 label var sum_trust_inv "Trust in Institutions (Sum)"
 label var sum_percep_inv "Political Perceptions (Sum)"
 label var sum_corrup "Perceptions on Corruption (Sum)"

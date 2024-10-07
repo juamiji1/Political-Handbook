@@ -7,14 +7,15 @@
 import delimited "${rdata}\GDP_PPP\GDP_US15.csv", clear
 
 ren countrycode iso
-egen gdp_1723=rowmean(gdp*) 
-gen ln_gdp1723=ln(gdp_1723)
+reshape long gdp_, i(iso) j(year)
+ren gdp_ gdp 
 
-keep iso gdp_1723 ln_gdp1723
+gen ln_gdp=ln(gdp)
+
+keep iso year gdp ln_gdp
 
 tempfile GDP
 save `GDP', replace 
-
 
 *-------------------------------------------------------------------------------
 *	PREPARING WVS7 DATA
@@ -185,12 +186,13 @@ foreach var of global allvars {
 }
 
 *Collapsing data at the coutnry level (using population weights - pweights)
-collapse (mean) ${trust_inv} sum_trust_inv index_trust ${percep_inv} sum_percep_inv index_percep q252 ${corrup} sum_corrup index_corrup q112 ${action_inv} sum_action_inv index_action ${insec_inv} sum_insec_inv index_insec ${labored_inv} sum_labored_inv index_labored ${polviol} sum_polviol_inv index_polviol ${citcult} sum_citcult_inv index_citcult ${polreg} z_index_* [pw=pwght], by(iso)
+collapse (mean) ${trust_inv} sum_trust_inv index_trust ${percep_inv} sum_percep_inv index_percep q252 ${corrup} sum_corrup index_corrup q112 ${action_inv} sum_action_inv index_action ${insec_inv} sum_insec_inv index_insec ${labored_inv} sum_labored_inv index_labored ${polviol} sum_polviol_inv index_polviol ${citcult} sum_citcult_inv index_citcult ${polreg} z_index_* [pw=pwght], by(regionwb a_year iso)
+ren a_year year 
 
 *-------------------------------------------------------------------------------
 *Merging and labelling 
 *-------------------------------------------------------------------------------
-merge 1:1 iso using `GDP', keep(1 3) nogen 
+merge 1:1 year iso using `GDP', keep(1 3) nogen 
 
 *Labelling
 gl allvars_inv "${trust} ${percep} ${action} ${insec} ${labored}"
@@ -221,10 +223,10 @@ label var z_index_labored "Labor and Ed. Perceptions (ICW)"
 label var z_index_polviol "Political Violence Culture (ICW)"
 label var z_index_citcult "Citizen Culture (ICW)"
 
-la var gdp_1723 "GDP PC"
-la var ln_gdp1723 "Ln(GDP PC)"
+la var gdp "GDP PC"
+la var ln_gdp "Ln(GDP PC)"
 
-save "${idata}\wvs7_gdp_country_lvl.dta", replace
+save "${idata}\wvs7_gdp_country_year_lvl.dta", replace
 
   
 

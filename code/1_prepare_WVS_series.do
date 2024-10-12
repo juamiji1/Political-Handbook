@@ -113,7 +113,8 @@ gen wgt=1
 gen stdgroup=1
 
 do "${do}\make_index_gr.do"
-make_index_gr trust wgt stdgroup ${trust_inv}
+gl trust_inv2 "q65_inv q66_inv q69_inv q70_inv q71_inv q72_inv q73_inv"
+make_index_gr trust wgt stdgroup ${trust_inv2}
 
 *-------------------------------------------------------------------------------
 *	POLITICAL PERCEPTIONS  
@@ -125,7 +126,7 @@ gl percep_inv "q224_inv q225_inv q227_inv q229_inv q232_inv"
 *DO THIS ONE: q112
 gl corrup "q113 q115"
 
-recode q112 (-5 -4 -3 -2 -1 =.)
+recode q112 q113 q115 (-5 -4 -3 -2 -1 =.)
 
 *Inverting the scales so most is better 
 foreach var of global percep {
@@ -206,8 +207,9 @@ foreach var of global citcult {
 egen sum_polviol_inv=rowtotal(${polviol}), missing
 egen sum_citcult_inv=rowtotal(${citcult}), missing
 
+gl citcult2 "q177 q178 q180 q181"
 make_index_gr polviol wgt stdgroup ${polviol}
-make_index_gr citcult wgt stdgroup ${citcult}
+make_index_gr citcult wgt stdgroup ${citcult2}
 
 *-------------------------------------------------------------------------------
 *	POLITICAL REGIMES 

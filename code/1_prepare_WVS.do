@@ -51,7 +51,8 @@ gl labored "q142 q143"
 gl polviol "q192 q194"
 gl citcult "q177 q178 q179 q180 q181"
 gl polreg "q235 q236 q237 q238 q243 q245 q250 q251"
-gl allvars "${trust} ${percep} ${corrup} ${action} ${insec} ${labored} ${polviol} ${citcult} ${polreg} q252 q112"
+gl account "q292a q292b q292c q292e q292g q292i q292j q292k q292l"
+gl allvars "${trust} ${percep} ${corrup} ${action} ${insec} ${labored} ${polviol} ${citcult} ${polreg} ${account} q252 q112"
 
 /*Taking out outliers: 
 foreach var of global allvars{
@@ -189,6 +190,18 @@ foreach var of global polreg {
 *check these ones!!!!!! negative values
 
 *-------------------------------------------------------------------------------
+*	ACCOUNTABILITY
+*-------------------------------------------------------------------------------
+end
+gl account "q292a q292b q292c q292e q292g q292i q292j q292k q292l"
+
+foreach var of global account {
+	replace `var' =. if `var'<0
+	gen d_`var'=(`var'>3) if `var'!=.
+}
+
+end
+*-------------------------------------------------------------------------------
 *	COLLAPSING DATA ATT COUNTRY (WEIGHTING)
 *-------------------------------------------------------------------------------
 *Standardizing ICW indexes
@@ -197,23 +210,15 @@ foreach var in index_trust index_percep index_corrup index_action index_insec in
 }
 
 *Capturing labels of the raw variables 
-gl allvars "${trust} ${percep} ${corrup} ${action} ${insec} ${labored} ${polviol} ${citcult} ${polreg} q252 q112"
+gl allvars "${trust} ${percep} ${corrup} ${action} ${insec} ${labored} ${polviol} ${citcult} ${polreg} q252 q112 ${account}"
 foreach var of global allvars {
 	local label_`var' : variable label `var'	
 	dis "`label_`var''"
 }
 
 *Collapsing data at the coutnry level (using population weights - pweights)
-collapse (mean) ${trust_inv} sum_trust_inv index_trust ${percep_inv} sum_percep_inv index_percep q252 ${corrup} sum_corrup index_corrup q112 ${action_inv} sum_action_inv index_action ${insec_inv} sum_insec_inv index_insec ${labored_inv} sum_labored_inv index_labored ${polviol} sum_polviol_inv index_polviol ${citcult} sum_citcult_inv index_citcult ${polreg} z_index_* [pw=w_weight], by(regionfe a_year iso)
+collapse (mean) ${trust_inv} sum_trust_inv index_trust ${percep_inv} sum_percep_inv index_percep q252 ${corrup} sum_corrup index_corrup q112 ${action_inv} sum_action_inv index_action ${insec_inv} sum_insec_inv index_insec ${labored_inv} sum_labored_inv index_labored ${polviol} sum_polviol_inv index_polviol ${citcult} sum_citcult_inv index_citcult ${polreg} z_index_* d_* [aw=w_weight], by(regionfe a_year iso)
 ren a_year year 
-
-gen wave =7
-
-save "${idata}\wvs7_country_year_lvl.dta", replace
-
-tab year if wave==7
-
-END
 
 *-------------------------------------------------------------------------------
 *Merging and labelling 
@@ -226,9 +231,10 @@ foreach var of global allvars_inv{
 	la var `var'_inv "`label_`var''"
 }
 
-gl allvars_noinv "${corrup} ${polviol} ${citcult} ${polreg} q252 q112"
+gl allvars_noinv "${corrup} ${polviol} ${citcult} ${polreg} q252 q112 ${account}"
 foreach var of global allvars_noinv{
-	la var `var' "`label_`var''"
+	cap la var `var' "`label_`var''"
+	cap la var d_`var' "`label_`var''"
 }
 
 label var sum_trust_inv "Trust in Institutions (Sum)"

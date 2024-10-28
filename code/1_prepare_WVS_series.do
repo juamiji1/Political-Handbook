@@ -12,7 +12,7 @@ gl oldvars "e001	e002	e003	e004	e005	e006	e012	e015	e016	e018	e023	e025	e026	e02
 
 *Globals per topic:
 gl trust "q65 q66 q69 q70 q71 q72 q73 q76"
-gl percep "q224 q225 q227 q229 q232"
+gl percep "q224 q225 q227 q229 q231 q232"
 gl corrup "q113 q115"
 gl action "q221 q222"
 gl insec "q131 q132 q133 q134 q135 q136 q137 q138"
@@ -20,6 +20,7 @@ gl labored "q142 q143"
 gl polviol "q192 q194"
 gl citcult "q177 q178 q179 q180 q181"
 gl polreg "q235 q236 q237 q238 q243 q245 q250 q251"
+gl info "q201 q202 q206 q207 q208"
 gl allvars "${trust} ${percep} ${corrup} ${action} ${insec} ${labored} ${polviol} ${citcult} ${polreg} q252 q112"
 
 *Prepare region FE (IMPROVE THIS)
@@ -35,7 +36,7 @@ save `REGIONFE', replace
 
 
 *-------------------------------------------------------------------------------
-*	PREPARING WBI GDP PP and POLITY 
+*	PREPARING WBI GDP PP - POLITY - VDEM
 *
 *-------------------------------------------------------------------------------
 *Load data on GDP PP at US$ 2015
@@ -71,7 +72,18 @@ restore
 tempfile POLITYINDEX
 save `POLITYINDEX', replace 
 
-	
+*Load data on polity index
+import delimited "${rdata}\Vdem\political-regime.csv", clear
+ren (code politicalregime) (iso vdem_regime)
+
+drop if iso==""
+keep if year >1979
+keep iso year vdem_regime
+
+tempfile VDEMINDEX
+save `VDEMINDEX', replace 
+
+
 *-------------------------------------------------------------------------------
 *	PREPARING WVS SERIES DATA
 *
@@ -120,8 +132,8 @@ make_index_gr trust wgt stdgroup ${trust_inv2}
 *	POLITICAL PERCEPTIONS  
 *-------------------------------------------------------------------------------
 * DO THIS ONE: q252
-gl percep "q224 q225 q227 q229 q232"
-gl percep_inv "q224_inv q225_inv q227_inv q229_inv q232_inv"
+gl percep "q224 q225 q227 q229 q231 q232"
+gl percep_inv "q224_inv q225_inv q227_inv q229_inv q231_inv q232_inv"
 
 *DO THIS ONE: q112
 gl corrup "q113 q115"
@@ -146,6 +158,11 @@ egen sum_corrup=rowtotal(${corrup}), missing
 make_index_gr percep wgt stdgroup ${percep_inv}
 make_index_gr corrup wgt stdgroup ${corrup}
 
+*Creating dummies
+foreach var of global percep_inv {
+	gen d_`var'=(`var'>2) if `var'!=.
+}
+
 *-------------------------------------------------------------------------------
 *	POLITICAL ACTION  
 *-------------------------------------------------------------------------------
@@ -157,6 +174,13 @@ foreach var of global action {
 	replace `var' =. if `var'<0 | `var'==4		// In this case 4 is not "allowed to vote"
 	gen `var'_inv=-(`var'-4)
 }
+
+*Creating dummies of participation 
+gen d_q221_inv=1 if q221_inv>2 & q221_inv!=.
+replace d_q221_inv=0 if q221_inv<3
+ 
+gen d_q222_inv=1 if q222_inv>2 & q222_inv!=.
+replace d_q222_inv=0 if q222_inv<3
 
 *Creating total sum  
 egen sum_action_inv=rowtotal(${action_inv}), missing
@@ -224,6 +248,16 @@ foreach var of global polreg {
 *check these ones!!!!!! negative values
 
 *-------------------------------------------------------------------------------
+*	INFORMATION
+*-------------------------------------------------------------------------------
+gl info "q201 q202 q206 q207 q208"
+
+foreach var of global info {
+	replace `var' =. if `var'<0
+	gen d_`var'=(`var'<5)
+}
+
+*-------------------------------------------------------------------------------
 *	COLLAPSING DATA ATT COUNTRY (WEIGHTING)
 *-------------------------------------------------------------------------------
 *Standardizing ICW indexes
@@ -232,14 +266,14 @@ foreach var in index_trust index_percep index_corrup index_action index_insec in
 }
 
 *Capturing labels of the raw variables 
-gl allvars "${trust} ${percep} ${corrup} ${action} ${insec} ${labored} ${polviol} ${citcult} ${polreg} q112" //q252
+gl allvars "${trust} ${percep} ${corrup} ${action} ${insec} ${labored} ${polviol} ${citcult} ${polreg} ${info} q112" //q252
 foreach var of global allvars {
 	local label_`var' : variable label `var'	
 	dis "`label_`var''"
 }
 
 *Collapsing data at the coutnry level (using population weights - pweights)
-collapse (mean) ${trust_inv} sum_trust_inv index_trust ${percep_inv} sum_percep_inv index_percep ${corrup} sum_corrup index_corrup q112 ${action_inv} sum_action_inv index_action ${insec_inv} sum_insec_inv index_insec ${labored_inv} sum_labored_inv index_labored ${polviol} sum_polviol_inv index_polviol ${citcult} sum_citcult_inv index_citcult ${polreg} z_index_* [pw=w_weight], by(regionfe wave a_year iso)
+collapse (mean) ${trust_inv} sum_trust_inv index_trust ${percep_inv} sum_percep_inv index_percep ${corrup} sum_corrup index_corrup q112 ${action_inv} sum_action_inv index_action ${insec_inv} sum_insec_inv index_insec ${labored_inv} sum_labored_inv index_labored ${polviol} sum_polviol_inv index_polviol ${citcult} sum_citcult_inv index_citcult ${polreg} z_index_* d_* [aw=w_weight], by(regionfe wave a_year iso)
 * q252
 
 ren a_year year 
@@ -250,20 +284,28 @@ ren a_year year
 merge 1:1 year iso using `GDP', keep(1 3) nogen 
 merge 1:1 year iso using `POLITYINDEX', keep(1 3) keepus(polity_index) nogen 
 merge m:1 iso using `POLITYINDEX18', keep(1 3 4 5) keepus(polity_index) update nogen
+merge 1:1 year iso using `VDEMINDEX', keep(1 3) keepus(vdem_regime) nogen 
+merge 1:1 year iso using "${idata}\wvs7_gdp_country_year_lvl.dta", keep(1 3) keepus(d_q292a d_q292b d_q292c d_q292e d_q292g d_q292i d_q292j d_q292k d_q292l) nogen 
 
 *Definitions of democracy
 gen democracy=1 if polity_index>=6 & polity_index!=.
 replace democracy=0 if polity_index<6 
 
+gen polity_regime=0 if polity_index<-5
+replace polity_regime=1 if polity_index>-6 & polity_index<6
+replace polity_regime=2 if polity_index>6 & polity_index!=. 
+
 *Labelling
-gl allvars_inv "${trust} ${percep} ${action} ${insec} ${labored}"
+gl allvars_inv "${trust} ${percep} ${action} ${insec} ${labored}" 
 foreach var of global allvars_inv{
-	la var `var'_inv "`label_`var''"
+	cap la var `var'_inv "`label_`var''"
+	cap la var d_`var'_inv "`label_`var'' (Share)"
 }
 
-gl allvars_noinv "${corrup} ${polviol} ${citcult} ${polreg} q112"
+gl allvars_noinv "${corrup} ${polviol} ${citcult} ${polreg} ${info} q112"
 foreach var of global allvars_noinv{
-	la var `var' "`label_`var''"
+	cap la var `var' "`label_`var''"
+	cap la var d_`var' "`label_`var'' (Share)"
 }
 
 label var sum_trust_inv "Trust in Institutions (Sum)"
@@ -286,6 +328,33 @@ label var z_index_citcult "Citizen Culture (ICW)"
 
 la var gdp "GDP PC"
 la var ln_gdp "Ln(GDP PC)"
+
+la var d_q221_inv "Vote at local level (Share)"
+la var d_q222_inv "Vote at national level (Share)"
+la var d_q224_inv "Votese are counted fairly (Share)"
+la var d_q225_inv "Opposition is prevented from running (Share)"
+la var d_q227_inv "Voters are bribed (Share)"
+la var d_q229_inv "Election officials are fair (Share)"
+la var d_q231_inv "Voters are threatened at the polls (Share)"
+la var d_q232_inv "Voters are offered a genuine choice (Share)"
+
+la var d_q201 "Information from newspaper (Share)"
+la var d_q202 "Information from TV news (Share)"
+la var d_q206 "Information from the Internet (Share)"
+la var d_q207 "Information from social media (Share)"
+la var d_q208 "Information from friends (Share)"
+
+la var d_q292a "Unsure whether to believe most politicians (Share)"
+la var d_q292b "Usually cautious about trusting politicians (Share)"
+la var d_q292c "Politicians are open about their decisions (Share)"
+la var d_q292e "Information by the government is unreliable (Share)"
+la var d_q292g "Most politicians are honest and truthful (Share)"
+la var d_q292i "Politicians are often incompetent and ineffective (Share)"
+la var d_q292j "Politicians don't respect people like me (Share)"
+la var d_q292k "Politicians put country above personal interests (Share)"
+la var d_q292l "Politicians ignore my community (Share)"
+
+
 
 save "${idata}\wvs_series_gdp_country_year_lvl.dta", replace
 

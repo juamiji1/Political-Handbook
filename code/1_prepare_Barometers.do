@@ -8,6 +8,17 @@ import excel "${rdata}\ISO3-country.xlsx", sheet("Sheet1") firstrow clear
 tempfile ISO
 save `ISO', replace
 
+*Prepare region FE (IMPROVE THIS)
+import delimited "${rdata}\ISO-region.csv", clear
+ren _all, low
+ren alpha3 iso
+
+encode region, gen(regionfe)
+encode subregion, gen(subregionfe)
+
+tempfile REGIONFE
+save `REGIONFE', replace 
+
 *Load data on polity index
 import delimited "${rdata}\Polity\democracy-index-polity.csv", clear
 ren (code democracy) (iso polity_index)
@@ -245,7 +256,6 @@ replace country = trim(country)
 
 duplicates tag country, g(dup)
 tab dup
-br if dup==1
 
 drop if dup==1 & arab==1
 drop dup 
@@ -280,26 +290,19 @@ ren iso3 iso
 merge 1:1 year iso using `POLITYINDEX', keep(1 3) keepus(polity_index) nogen 
 merge m:1 iso using `POLITYINDEX18', keep(1 3 4 5) keepus(polity_index) update nogen
 merge 1:1 year iso using `VDEMINDEX', keep(1 3) keepus(vdem_regime) nogen 
+merge 1:1 iso using `REGIONFE', keep(1 3) keepus(regionfe subregionfe) nogen 
+
+*Definitions of democracy
+gen democracy=1 if polity_index>=6 & polity_index!=.
+replace democracy=0 if polity_index<6 
+
+gen polity_regime=0 if polity_index<-5
+replace polity_regime=1 if polity_index>-6 & polity_index<6
+replace polity_regime=2 if polity_index>6 & polity_index!=. 
 
 
-save "${idata}\barometer_22_23_country_.dta", replace
-
-
-
-
-
-
-
-
-
-
-
-
+save "${idata}\barometer_22_23_country_lvl.dta", replace
 
 
 
-
-
-
-
-
+*END

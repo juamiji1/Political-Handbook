@@ -49,6 +49,16 @@ keep iso year vdem_regime
 tempfile VDEMINDEX
 save `VDEMINDEX', replace 
 
+import delimited "${rdata}\Vdem\electoral-democracy-index.csv", clear
+ren (code electoraldemocracyindexbestestim) (iso vdem_index)
+
+drop if iso==""
+keep if year >1979
+keep iso year vdem_index
+
+tempfile VDEMINDEX2
+save `VDEMINDEX2', replace 
+
 
 *-------------------------------------------------------------------------------
 *	PREPARING LATINOBAROMETER
@@ -290,6 +300,7 @@ ren iso3 iso
 merge 1:1 year iso using `POLITYINDEX', keep(1 3) keepus(polity_index) nogen 
 merge m:1 iso using `POLITYINDEX18', keep(1 3 4 5) keepus(polity_index) update nogen
 merge 1:1 year iso using `VDEMINDEX', keep(1 3) keepus(vdem_regime) nogen 
+merge 1:1 year iso using `VDEMINDEX2', keep(1 3) keepus(vdem_index) nogen 
 merge 1:1 iso using `REGIONFE', keep(1 3) keepus(regionfe subregionfe) nogen 
 
 *Definitions of democracy
@@ -297,9 +308,11 @@ gen democracy=1 if polity_index>=6 & polity_index!=.
 replace democracy=0 if polity_index<6 
 
 gen polity_regime=0 if polity_index<-5
-replace polity_regime=1 if polity_index>-6 & polity_index<6
-replace polity_regime=2 if polity_index>6 & polity_index!=. 
+replace polity_regime=1 if polity_index>=-6 & polity_index<6
+replace polity_regime=2 if polity_index>=6 & polity_index!=. 
 
+*Fixing one name 
+replace country="Germany" if iso=="DEU"
 
 save "${idata}\barometer_22_23_country_lvl.dta", replace
 

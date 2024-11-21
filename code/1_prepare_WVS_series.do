@@ -83,6 +83,16 @@ keep iso year vdem_regime
 tempfile VDEMINDEX
 save `VDEMINDEX', replace 
 
+import delimited "${rdata}\Vdem\electoral-democracy-index.csv", clear
+ren (code electoraldemocracyindexbestestim) (iso vdem_index)
+
+drop if iso==""
+keep if year >1979
+keep iso year vdem_index
+
+tempfile VDEMINDEX2
+save `VDEMINDEX2', replace 
+
 
 *-------------------------------------------------------------------------------
 *	PREPARING WVS SERIES DATA
@@ -115,6 +125,7 @@ foreach var of global trust {
 foreach var of global trust {
 	replace `var' =. if `var'<0
 	gen `var'_inv=-(`var'-5)
+	gen dm_`var'_inv=(`var'_inv!=.)
 }
 
 *Creating total sum  
@@ -136,9 +147,9 @@ gl percep "q224 q225 q227 q229 q231 q232"
 gl percep_inv "q224_inv q225_inv q227_inv q229_inv q231_inv q232_inv"
 
 *DO THIS ONE: q112
-gl corrup "q113 q115"
+gl corrup "q113 q115 q116"
 
-recode q112 q113 q115 (-5 -4 -3 -2 -1 =.)
+recode q112 q113 q115 q116 (-5 -4 -3 -2 -1 =.)
 
 *Inverting the scales so most is better 
 foreach var of global percep {
@@ -148,6 +159,7 @@ foreach var of global percep {
 foreach var of global percep {
 	replace `var' =. if `var'<0
 	gen `var'_inv=-(`var'-5)
+	gen dm_`var'_inv=(`var'_inv!=.)
 }
 
 *Creating total sum  
@@ -163,6 +175,14 @@ foreach var of global percep_inv {
 	gen d_`var'=(`var'>2) if `var'!=.
 }
 
+foreach var of global corrup {
+	gen d_`var'=(`var'>2) if `var'!=.
+}
+
+foreach var of global corrup {
+	gen dm_`var'=(`var'!=.)
+}
+
 *-------------------------------------------------------------------------------
 *	POLITICAL ACTION  
 *-------------------------------------------------------------------------------
@@ -173,6 +193,7 @@ gl action_inv "q221_inv q222_inv"
 foreach var of global action {
 	replace `var' =. if `var'<0 | `var'==4		// In this case 4 is not "allowed to vote"
 	gen `var'_inv=-(`var'-4)
+	gen dm_`var'_inv=(`var'_inv!=.)
 }
 
 *Creating dummies of participation 
@@ -201,11 +222,13 @@ gl labored_inv "q142_inv q143_inv"
 foreach var of global insec {
 	replace `var' =. if `var'<0
 	gen `var'_inv=-(`var'-5)
+	gen dm_`var'_inv=(`var'_inv!=.)
 }
 
 foreach var of global labored {
 	replace `var' =. if `var'<0
 	gen `var'_inv=-(`var'-5)
+	gen dm_`var'_inv=(`var'_inv!=.)
 }
 
 egen sum_insec_inv=rowtotal(${insec_inv}), missing
@@ -222,10 +245,12 @@ gl citcult "q177 q178 q179 q180 q181"
 
 foreach var of global polviol {
 	replace `var' =. if `var'<0
+	gen dm_`var'=(`var'!=.)
 }
 
 foreach var of global citcult {
 	replace `var' =. if `var'<0
+	gen dm_`var'=(`var'!=.)
 }
 
 egen sum_polviol_inv=rowtotal(${polviol}), missing
@@ -243,6 +268,7 @@ gl polreg "q235 q236 q237 q238 q243 q245 q250 q251"	//Make them apart q238 is di
 
 foreach var of global polreg {
 	replace `var' =. if `var'<0
+	gen dm_`var'=(`var'!=.)
 }
 
 *check these ones!!!!!! negative values
@@ -255,6 +281,7 @@ gl info "q201 q202 q206 q207 q208"
 foreach var of global info {
 	replace `var' =. if `var'<0
 	gen d_`var'=(`var'<5)
+	gen dm_`var'=(`var'!=.)
 }
 
 *-------------------------------------------------------------------------------
@@ -273,7 +300,7 @@ foreach var of global allvars {
 }
 
 *Collapsing data at the coutnry level (using population weights - pweights)
-collapse (mean) ${trust_inv} sum_trust_inv index_trust ${percep_inv} sum_percep_inv index_percep ${corrup} sum_corrup index_corrup q112 ${action_inv} sum_action_inv index_action ${insec_inv} sum_insec_inv index_insec ${labored_inv} sum_labored_inv index_labored ${polviol} sum_polviol_inv index_polviol ${citcult} sum_citcult_inv index_citcult ${polreg} z_index_* d_* [aw=w_weight], by(regionfe wave a_year iso)
+collapse (mean) ${trust_inv} sum_trust_inv index_trust ${percep_inv} sum_percep_inv index_percep ${corrup} sum_corrup index_corrup q112 ${action_inv} sum_action_inv index_action ${insec_inv} sum_insec_inv index_insec ${labored_inv} sum_labored_inv index_labored ${polviol} sum_polviol_inv index_polviol ${citcult} sum_citcult_inv index_citcult ${polreg} z_index_* d_* dm_* [aw=w_weight], by(regionfe wave a_year iso)
 * q252
 
 ren a_year year 
@@ -285,6 +312,7 @@ merge 1:1 year iso using `GDP', keep(1 3) nogen
 merge 1:1 year iso using `POLITYINDEX', keep(1 3) keepus(polity_index) nogen 
 merge m:1 iso using `POLITYINDEX18', keep(1 3 4 5) keepus(polity_index) update nogen
 merge 1:1 year iso using `VDEMINDEX', keep(1 3) keepus(vdem_regime) nogen 
+merge 1:1 year iso using `VDEMINDEX2', keep(1 3) keepus(vdem_index) nogen 
 merge 1:1 year iso using "${idata}\wvs7_gdp_country_year_lvl.dta", keep(1 3) keepus(d_q292a d_q292b d_q292c d_q292e d_q292g d_q292i d_q292j d_q292k d_q292l) nogen 
 
 *Definitions of democracy
@@ -337,6 +365,10 @@ la var d_q227_inv "Voters are bribed (Share)"
 la var d_q229_inv "Election officials are fair (Share)"
 la var d_q231_inv "Voters are threatened at the polls (Share)"
 la var d_q232_inv "Voters are offered a genuine choice (Share)"
+
+la var d_q113 "Involved in corruption: State authorities (Share)"
+la var d_q115 "Involved in corruption: Local authorities (Share)"
+la var d_q116 "Involved in corruption: Police and judiciary (Share)"
 
 la var d_q201 "Information from newspaper (Share)"
 la var d_q202 "Information from TV news (Share)"

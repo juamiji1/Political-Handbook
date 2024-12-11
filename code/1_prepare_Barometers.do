@@ -100,7 +100,76 @@ la var d_reduce_corrup "Corruption has reduced"
 
 tempfile LATINOBAROMETER
 save `LATINOBAROMETER', replace
-  
+
+*-------------------------------------------------------------------------------
+*	PREPARING AMERICAS BAROMETER
+*	
+*-------------------------------------------------------------------------------
+* Set the working directory to your folder containing the .dta files
+cd "${rdata}\Barometers\Americas_barometer_2023"
+
+local c=1
+
+* List all .dta files in the directory
+local dta_files : dir . files "*.dta"
+
+* Loop over each .dta file
+foreach file of local dta_files {
+    di "Processing `file'"
+    
+    * Use the current .dta file
+    use "`file'", clear
+    
+    * Rename all variables to lowercase
+    ren _all, lower
+    
+    * Generate dummy variables from tabulation
+    cap tab a4n, generate(d_)
+    
+    * Rename specific variables
+    cap ren (d_1 d_2 d_4 d_5 d_6) (d_economic d_crime d_political d_unemployment d_corruption) // CAN don't have these vars 
+    
+    * Create new variables based on conditions
+    cap gen d_corrup_politicians = (exc7new > 2) if !missing(exc7new) // NIC don't have these vars 
+    cap gen d_courts = (b1 > 4) if b1<. // JAM don't have these vars 
+    gen d_parties = (b21 > 3) if b21<.
+    gen d_elections = (b47a > 4) if b47a<.
+	
+	decode pais, gen(country) 
+    
+    * Save the processed data to a new file
+	local filename = subinstr("`file'", ".dta", "", .)
+	tempfile BAROMETER`c'
+    save `BAROMETER`c'', replace
+	
+	local c=`c'+1
+	dis "`c'"
+}
+
+use `BAROMETER1', clear 
+forval c=2/9{
+	append using `BAROMETER`c''
+}
+
+collapse d_corruption d_political d_crime d_economic d_unemployment d_parties d_elections d_corrup_politicians d_courts [aw = wt], by(country year)
+
+gen americas=1
+   
+* Label the variables
+label variable d_corruption "Most important problem: Corruption"
+label variable d_political "Most important problem: Political"
+label variable d_crime "Most important problem: Crime"
+label variable d_economic "Most important problem: Economic"
+label variable d_unemployment "Most important problem: Unemployment"
+label variable d_parties "Confidence in: Parties"
+label variable d_elections "Confidence in: Elections"
+label variable d_courts "Confidence in: Courts"
+label variable d_corrup_politicians "Most politicians are corrupt"
+
+tempfile AMERICASBAROMETER
+save `AMERICASBAROMETER', replace
+
+	
 *-------------------------------------------------------------------------------
 *	PREPARING ARAB
 *

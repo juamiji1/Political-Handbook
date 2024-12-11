@@ -89,6 +89,28 @@ collapse d_corruption d_political d_crime d_economic d_unemployment d_parties d_
 
 gen latino=1
 
+replace country=trim(country)
+
+*ISO code
+gen iso = "ARG" if country == "Argentina"
+replace iso = "BOL" if country == "Bolivia"
+replace iso = "BRA" if country == "Brasil"
+replace iso = "CHL" if country == "Chile"
+replace iso = "COL" if country == "Colombia"
+replace iso = "CRI" if country == "Costa Rica"
+replace iso = "ECU" if country == "Ecuador"
+replace iso = "SLV" if country == "El Salvador"
+replace iso = "GTM" if country == "Guatemala"
+replace iso = "HND" if country == "Honduras"
+replace iso = "MEX" if country == "Mexico"
+replace iso = "PAN" if country == "Panama"
+replace iso = "PRY" if country == "Paraguay"
+replace iso = "PER" if country == "Peru"
+replace iso = "DOM" if country == "Rep. Dominicana"
+replace iso = "URY" if country == "Uruguay"
+replace iso = "VEN" if country == "Venezuela"
+
+*Labeling
 la var d_corruption "Most important problem: Corruption"
 la var d_political "Most important problem: Political"
 la var d_crime "Most important problem: Crime"
@@ -100,6 +122,7 @@ la var d_reduce_corrup "Corruption has reduced"
 
 tempfile LATINOBAROMETER
 save `LATINOBAROMETER', replace
+
 
 *-------------------------------------------------------------------------------
 *	PREPARING AMERICAS BAROMETER
@@ -147,7 +170,7 @@ foreach file of local dta_files {
 }
 
 use `BAROMETER1', clear 
-forval c=2/9{
+forval c=2/26{
 	append using `BAROMETER`c''
 }
 
@@ -168,6 +191,8 @@ label variable d_corrup_politicians "Most politicians are corrupt"
 
 tempfile AMERICASBAROMETER
 save `AMERICASBAROMETER', replace
+
+cd "${data}"
 
 	
 *-------------------------------------------------------------------------------
@@ -212,7 +237,8 @@ la var d_reduce_corrup "Corruption has reduced"
 
 tempfile ARABAROMETER
 save `ARABAROMETER', replace
-   
+  
+  
 *-------------------------------------------------------------------------------
 *	PREPARING AFRO
 *
@@ -328,7 +354,9 @@ merge 1:1 isocntry using `EUROBAROMETER', nogen
 *	APPENDING EVERYTHING
 *
 *-------------------------------------------------------------------------------
-append using `AFROBAROMETER' `ARABAROMETER' `LATINOBAROMETER'
+append using `AFROBAROMETER' `ARABAROMETER' `AMERICASBAROMETER'
+
+* `LATINOBAROMETER'
 
 replace country = regexr(country, " \(.+\)", "")
 replace country = trim(country)
@@ -341,6 +369,31 @@ drop dup
 
 merge 1:1 country using `ISO', keep(1 3) nogen
 
+replace iso3 = "BHS" if country == "Bahamas"
+replace iso3 = "BRA" if country == "Brasil"
+replace iso3 = "CPV" if country == "Cabo Verde"
+replace iso3 = "COG" if country == "Congo-Brazzaville"
+replace iso3 = "CYP" if country == "Cyprus - CY"
+replace iso3 = "CIV" if country == "Côte d'Ivoire"
+replace iso3 = "DEU" if country == "DE"
+replace iso3 = "DEW" if country == "DW" // Assumed placeholder; clarify if needed
+replace iso3 = "SWZ" if country == "Eswatini"
+replace iso3 = "ETH" if country == "Ethiopia"
+replace iso3 = "GMB" if country == "Gambia"
+replace iso3 = "XKX" if country == "Kosovo" // Kosovo does not have an official ISO code, X is commonly used
+replace iso3 = "LUX" if country == "Luxemburg"
+replace iso3 = "MKD" if country == "Macedonia" // Officially North Macedonia (MKD)
+replace iso3 = "MNE" if country == "Montenegro"
+replace iso3 = "MEX" if country == "México"
+replace iso3 = "PSE" if country == "Palestine"
+replace iso3 = "PAN" if country == "Panamá"
+replace iso3 = "PER" if country == "Perú"
+replace iso3 = "DOM" if country == "República Dominicana"
+replace iso3 = "SRB" if country == "Serbia"
+replace iso3 = "SVK" if country == "Slovakia"
+replace iso3 = "STP" if country == "São Tomé and Príncipe"
+
+/*
 replace iso3 = "BRA" if country == "Brasil"
 replace iso3 = "CPV" if country == "Cabo Verde"
 replace iso3 = "COG" if country == "Congo-Brazzaville"
@@ -360,8 +413,9 @@ replace iso3 = "DOM" if country == "Rep. Dominicana"
 replace iso3 = "SRB" if country == "Serbia"
 replace iso3 = "SVK" if country == "Slovakia"
 replace iso3 = "STP" if country == "São Tomé and Príncipe"
+*/
 
-drop if country=="Cyprus - CY" |iso3==""
+drop if country=="Cyprus - CY" | iso3==""
 
 ren iso3 iso
 
@@ -371,6 +425,7 @@ merge m:1 iso using `POLITYINDEX18', keep(1 3 4 5) keepus(polity_index) update n
 merge 1:1 year iso using `VDEMINDEX', keep(1 3) keepus(vdem_regime) nogen 
 merge 1:1 year iso using `VDEMINDEX2', keep(1 3) keepus(vdem_index) nogen 
 merge 1:1 iso using `REGIONFE', keep(1 3) keepus(regionfe subregionfe) nogen 
+merge 1:1 iso using `LATINOBAROMETER', update nogen 
 
 *Definitions of democracy
 gen democracy=1 if polity_index>=6 & polity_index!=.

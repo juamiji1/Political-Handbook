@@ -47,7 +47,7 @@ foreach var of global percep {
 *-------------------------------------------------------------------------------
 *	ACCOUNTABILITY
 *-------------------------------------------------------------------------------
-gl account "d_corruption d_parties d_elections d_reduce_corrup d_rleader_corruption d_local_corruption d_nat_corruption"
+gl account "d_corruption d_parties d_elections d_reduce_corrup d_rleader_corruption d_local_corruption d_nat_corruption d_courts d_corrup_politicians"
 
 *Using Vdem Index Classification
 foreach var of global account {
@@ -92,7 +92,8 @@ foreach var of global account {
 
 }
 
-reghdfe d_elections i.vdem_regime_v2, abs(i.year i.regionfe) keepsingleton
-	
+
+
+*END
 	
 	

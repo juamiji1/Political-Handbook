@@ -32,4 +32,11 @@ To replicate the results follow the pipeline in the `0_master.do` in the `code` 
 | `1_prepare_WVS_series.do` | Prepares the `wvs_series_gdp_country_year_lvl.dta` |
 | `1_prepare_Barometers.do`   | Prepares the `barometer_22_23_country_lvl.dta` |
 | `1_prepare_WJP.do`   | Prepares the `wjp_13_24_country_lvl.dta` |
+| `2_scatter_coefplots_WVS_vdem.do` | Creates plots of sections 2.4 2.5 3.2 3.3 4.2 4.3 |
+| `2_scatter_coefplots_Barometers_vdem.do` | Creates plots of sections 5.2 5.3 |
+| `2_scatter_WVS_GDP.do` | Creates plots of sections 2.4, 3.4, 4.4 |
+| `2_scatter_barometer_GDP.do` | Creates plots of sections 5.4 8.2| 
+| `2_scatter_WJP_GDP.do` | Creates plots of sections 6.1 6.2 |
+
+
 

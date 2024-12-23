@@ -93,20 +93,6 @@ foreach var of global account {
 }
 
 
-local var d_corruption
-local varlabel : variable label `var' 
-two (scatter `var' vdem_index if regionfe==1, mlabel(iso) mlabcolor(black) mlabsize(vsmall) mlabsize(*.7) msymbol(Oh)) ///
-	(scatter `var' vdem_index if regionfe==2, mlabel(iso) mlabcolor(black) mlabsize(vsmall) mlabsize(*.7) msymbol(Oh)) ///
-	(lowess `var' vdem_index if regionfe<3, lc("stc2")), ///
-	legend(position(6) row(1) label( 1 "Africa") label( 2 "Americas") label(3 "Asia") label(4 "Europe") label(5 "Lowess")) b2title("Regime Classification (VDEM Index)", size(medium)) ytitle("`varlabel'", size(medsmall))  xtitle("") 
-gr export "${plots}/scatter_`var'_vdem_index_v2.pdf", as(pdf) replace
-
-local var d_corruption_spread
-local varlabel : variable label `var' 
-two (scatter `var' vdem_index if regionfe==4, mlabel(iso) mlabcolor(black) mlabsize(vsmall) mlabsize(*.7) msymbol(Oh) mcolor("stc4")) ///
-	(lowess `var' vdem_index if regionfe==4, lc("stc2")), ///
-	legend(position(6) row(1) label(1 "Europe") label(2 "Lowess")) b2title("Regime Classification (VDEM Index)", size(medium)) ytitle("`varlabel'", size(medsmall))  xtitle("") 
-gr export "${plots}/scatter_`var'_vdem_index.pdf", as(pdf) replace
 
 	
 

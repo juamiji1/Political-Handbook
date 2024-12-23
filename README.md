@@ -25,5 +25,11 @@ There are three main data sets:
 Results are stored in the Overleaf folder: [https://www.overleaf.com/project/66fb71ad9e2e6d9da7ddcd82] 
    
 ## Code Location:
-• To replicate the results follow the pipeline in the `0_master.do` in the `code` folder located in this repository.
+To replicate the results follow the pipeline in the `0_master.do` in the `code` folder located in this repository. The pipeline is: 
+
+| Do-file      | Description |
+| ----------- | ----------- |
+| `1_prepare_WVS_series.do` | Prepares the `wvs_series_gdp_country_year_lvl.dta` |
+| `1_prepare_Barometers.do`   | Prepares the `barometer_22_23_country_lvl.dta` |
+| `1_prepare_WJP.do`   | Prepares the `wjp_13_24_country_lvl.dta` |
 

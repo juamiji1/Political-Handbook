@@ -1,28 +1,29 @@
 # READ ME
 ## Data:
-
 The interim and raw data are stored in `\Dropbox\1-Political-Claudio-Project\data`. 
 
 ### Data Sources:
-
 • GDP per capita: comes from the World Bank’s World Development Indicators. The series that I am
 using is the constant 2015 US dollars.
 
 • Data on values and perceptions: comes from the 7th version of the World Values Survey (WVS). The
 interviews were done between 2017 and 2022.
  
-• We also gathered data regarding perceptions from the Americas, Latino, Arab, African, and Euro 
+• We also gathered data regarding perceptions from the Americas, Latino, Arab, African, and Euro from 2022 to 2023.
 
-• Data on the political regime comes from the V-DEM project 
+• Data on the political regime comes from the V-DEM project since 1990.
 
-• Data regarding courts and rule of law comes from the World Justice Project
+• Data regarding courts and the rule of law comes from the World Justice Project since 2013.
 
 ### Data Interim: 
+There are three main data sets: 
+1. `wvs_series_gdp_country_year_lvl.dta`: contains information at the country level of the WVS, V-DEM index, and GDP.
+2. `barometer_22_23_country_lvl.dta`: contains information at the country level from barometers, V-DEM index, and GDP.
+3. `wjp_13_24_country_lvl.dta`: contains information at the country level from WJP, V-DEM index, and GDP.
 
-•
-
+## Results: 
+Results are stored in the Overleaf folder: [https://www.overleaf.com/project/66fb71ad9e2e6d9da7ddcd82] 
+   
 ## Code Location:
-
-• The code to generate the figures is located in the following GitHub repository: https://github.
-com/juamiji1/Political-Handbook. Ask me for access.
+• To replicate the results follow the pipeline in the `0_master.do` in the `code` folder located in this repository.
 

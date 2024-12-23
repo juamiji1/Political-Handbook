@@ -60,7 +60,7 @@ do "${code}/2_scatter_coefplots_Barometers_vdem.do"
 *-------------------------------------------------------------------------------
 * Plots correlating surveys and GDP 
 *-------------------------------------------------------------------------------
-*NOTE: I took out autocracies as requested 
+*NOTE: I took out autocracies 
 do "${code}/2_scatter_WVS_GDP.do"
 do "${code}/2_scatter_barometer_GDP.do"
 do "${code}/2_scatter_WJP_GDP.do"

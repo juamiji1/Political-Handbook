@@ -138,14 +138,14 @@ reshape long a_x_ ha_x_ va_x_ da_x_ pc_x_ ec_x_ , i(iso) j(year)
 ren *x_ *vdemcore
 
 la var a_vdemcore "Accountability Index (VDEM)"
-la var ha_vdemcore "Vertical Accountability Index (VDEM)"
-la var va_vdemcore "Horizontal Accountability Index (VDEM)"
+la var ha_vdemcore "Horizontal Accountability Index (VDEM)"
+la var va_vdemcore "Vertical Accountability Index (VDEM)"
 la var da_vdemcore "Diagonal Accountability Index (VDEM)"
 la var pc_vdemcore "Political Corruption Index (VDEM)"
 la var ec_vdemcore "Executive Corruption Index (VDEM)"
 
-tempfile VDEMCORE2
-save `VDEMCORE2', replace
+tempfile VDEMCORE
+save `VDEMCORE', replace
 
 *Corruption perception index score (WB)
 import excel "${rdata}\WB\TI-CPI.xlsx", sheet("Data") firstrow case(lower) clear
@@ -163,19 +163,46 @@ keep iso cp_index*
 
 reshape long cp_index, i(iso) j(year)
 
+la var cp_index "Corruption Perceptions Index (WB)"
+
 tempfile CPINDEX
 save `CPINDEX', replace 
 
+*Press Freedom Index (RSF-WB)
+import excel "${rdata}\WB\RWB-PFI.xlsx", sheet("Data") firstrow case(lower) clear
 
-END
+keep if indicator=="Press Freedom Index - Score"
+
+foreach var of varlist i - ac { 
+    local lbl: var label `var'
+    local numlbl = substr("`lbl'", strpos("`lbl'", "#")+1, .) // Extract number
+    rename `var' pf`numlbl'
+}
+
+ren economyiso3 iso
+keep iso pf*
+
+reshape long pf, i(iso) j(year)
+
+ren pf pf_index
+
+la var pf_index "Press Freedom Index (RSF)"
+
+tempfile PFINDEX
+save `PFINDEX', replace 
 
 *-------------------------------------------------------------------------------
 *Merging everything together
+*
+*-------------------------------------------------------------------------------
 use `VAINDEX', clear
 
 merge 1:1 year iso using `VHDAINDEX', nogen
 merge 1:1 year iso using `WJPINDEX', nogen 
 merge 1:1 year iso using `IDAINDEX', nogen 
+merge 1:1 year iso using `VDEMCORE', nogen 
+merge 1:1 year iso using `CPINDEX', keep(1 3) nogen
+merge 1:1 year iso using `PFINDEX', keep(1 3) nogen
 merge 1:1 year iso using `VDEMINDEX', keep(1 3) keepus(vdem_regime) nogen 
 merge 1:1 year iso using `VDEMINDEX2', keep(1 3) keepus(vdem_index) nogen
 merge m:1 iso using `REGIONFE', keep(1 3) keepus(regionfe subregionfe) nogen 

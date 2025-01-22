@@ -112,6 +112,7 @@ replace indicator_type = "va" if indicator==  "Vertical accountability index"
 replace indicator_type = "da" if indicator==  "Diagonal accountability index"
 replace indicator_type = "pc" if indicator==  "Political corruption index"
 replace indicator_type = "ec" if indicator==  "Executive corruption index"
+replace indicator_type = "jc" if indicator==  "Judicial constraints on the executive index"
 
 drop if indicator_type == ""  // Drop rows without relevant indicators
 
@@ -133,7 +134,7 @@ foreach i of local itype{
 	ren *_`i' *
 }
 
-reshape long a_x_ ha_x_ va_x_ da_x_ pc_x_ ec_x_ , i(iso) j(year)
+reshape long a_x_ ha_x_ va_x_ da_x_ pc_x_ ec_x_ jc_x_, i(iso) j(year)
 
 ren *x_ *vdemcore
 
@@ -143,6 +144,7 @@ la var va_vdemcore "Vertical Accountability Index (VDEM)"
 la var da_vdemcore "Diagonal Accountability Index (VDEM)"
 la var pc_vdemcore "Political Corruption Index (VDEM)"
 la var ec_vdemcore "Executive Corruption Index (VDEM)"
+la var jc_vdemcore "Judicial Constraints on the Executive Index (VDEM)"
 
 tempfile VDEMCORE
 save `VDEMCORE', replace

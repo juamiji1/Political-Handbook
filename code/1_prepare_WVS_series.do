@@ -93,6 +93,24 @@ keep iso year vdem_index
 tempfile VDEMINDEX2
 save `VDEMINDEX2', replace 
 
+import delimited "${rdata}\Vdem\voter-turnout-of-registered-voters.csv", clear
+ren (code voterturnoutofregisteredvoters) (iso turnout_vdemcore)
+
+drop if iso==""
+keep if year >1979
+keep iso year turnout_vdemcore
+
+la var turnout_vdemcore "% Turnout (VDEM)"
+
+encode iso, gen(iso_code)
+tsset iso_code year 
+tsfill, full 
+
+by iso_code: carryforward iso turnout_vdemcore, replace
+drop if turnout_vdemcore==.
+
+tempfile VDEMTURN
+save `VDEMTURN', replace 
 
 *-------------------------------------------------------------------------------
 *	PREPARING WVS SERIES DATA
@@ -135,7 +153,7 @@ egen sum_trust_inv=rowtotal(${trust_inv}), missing
 gen wgt=1
 gen stdgroup=1
 
-do "${do}\make_index_gr.do"
+do "${code}\make_index_gr.do"
 gl trust_inv2 "q65_inv q66_inv q69_inv q70_inv q71_inv q72_inv q73_inv"
 make_index_gr trust wgt stdgroup ${trust_inv2}
 
@@ -313,6 +331,7 @@ merge 1:1 year iso using `POLITYINDEX', keep(1 3) keepus(polity_index) nogen
 merge m:1 iso using `POLITYINDEX18', keep(1 3 4 5) keepus(polity_index) update nogen
 merge 1:1 year iso using `VDEMINDEX', keep(1 3) keepus(vdem_regime) nogen 
 merge 1:1 year iso using `VDEMINDEX2', keep(1 3) keepus(vdem_index) nogen 
+merge 1:1 year iso using `VDEMTURN', keep(1 3) keepus(turnout_vdemcore) nogen 
 merge 1:1 year iso using "${idata}\wvs7_gdp_country_year_lvl.dta", keep(1 3) keepus(d_q292a d_q292b d_q292c d_q292e d_q292g d_q292i d_q292j d_q292k d_q292l) nogen 
 
 *Definitions of democracy

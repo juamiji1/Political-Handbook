@@ -65,6 +65,25 @@ ren va va_index
 tempfile VAINDEX
 save `VAINDEX', replace 
 
+import excel "${rdata}\WB\WB-WWGI.xlsx", sheet("Data") firstrow case(lower) clear
+keep if indicator=="Control of Corruption: Estimate"
+
+foreach var of varlist i - af { 
+    local lbl: var label `var'
+    local numlbl = substr("`lbl'", strpos("`lbl'", "#")+1, .) // Extract number
+    rename `var' cc`numlbl'
+}
+
+ren economyiso3 iso
+keep iso cc*
+
+reshape long cc, i(iso) j(year)
+
+ren cc cc_index
+
+tempfile CCINDEX
+save `CCINDEX', replace 
+
 import excel "${rdata}\WB\P_Data_Extract_From_Country_Policy_and_Institutional_Assessment.xlsx", sheet("Data") firstrow case(lower) clear
 ren countrycode iso 
 keep iso yr*
@@ -113,6 +132,7 @@ replace indicator_type = "da" if indicator==  "Diagonal accountability index"
 replace indicator_type = "pc" if indicator==  "Political corruption index"
 replace indicator_type = "ec" if indicator==  "Executive corruption index"
 replace indicator_type = "jc" if indicator==  "Judicial constraints on the executive index"
+replace indicator_type = "c" if indicator==  "Clientelism Index"
 
 drop if indicator_type == ""  // Drop rows without relevant indicators
 
@@ -134,17 +154,18 @@ foreach i of local itype{
 	ren *_`i' *
 }
 
-reshape long a_x_ ha_x_ va_x_ da_x_ pc_x_ ec_x_ jc_x_, i(iso) j(year)
+reshape long a_x_ ha_x_ va_x_ da_x_ pc_x_ ec_x_ jc_x_ c_x_, i(iso) j(year)
 
 ren *x_ *vdemcore
 
-la var a_vdemcore "Accountability Index (VDEM)"
+la var a_vdemcore "Overall Accountability Index (VDEM)"
 la var ha_vdemcore "Horizontal Accountability Index (VDEM)"
 la var va_vdemcore "Vertical Accountability Index (VDEM)"
 la var da_vdemcore "Diagonal Accountability Index (VDEM)"
 la var pc_vdemcore "Political Corruption Index (VDEM)"
 la var ec_vdemcore "Executive Corruption Index (VDEM)"
 la var jc_vdemcore "Judicial Constraints on the Executive Index (VDEM)"
+la var c_vdemcore "Clientelism Index (VDEM)"
 
 tempfile VDEMCORE
 save `VDEMCORE', replace
@@ -193,6 +214,17 @@ la var pf_index "Press Freedom Index (RSF)"
 tempfile PFINDEX
 save `PFINDEX', replace 
 
+*Human Development Index (UNDP)
+import delimited "${rdata}\UNDP\human-development-index.csv", clear
+
+keep if code!=""
+ren (code humandevelopmentindex) (iso hd_index)
+
+la var hd_index "Human Development Index (UNDP)"
+
+tempfile HDINDEX
+save `HDINDEX', replace 
+
 *-------------------------------------------------------------------------------
 *Merging everything together
 *
@@ -203,14 +235,17 @@ merge 1:1 year iso using `VHDAINDEX', nogen
 merge 1:1 year iso using `WJPINDEX', nogen 
 merge 1:1 year iso using `IDAINDEX', nogen 
 merge 1:1 year iso using `VDEMCORE', nogen 
+merge 1:1 year iso using `CCINDEX', keep(1 3) nogen
 merge 1:1 year iso using `CPINDEX', keep(1 3) nogen
 merge 1:1 year iso using `PFINDEX', keep(1 3) nogen
 merge 1:1 year iso using `VDEMINDEX', keep(1 3) keepus(vdem_regime) nogen 
 merge 1:1 year iso using `VDEMINDEX2', keep(1 3) keepus(vdem_index) nogen
 merge m:1 iso using `REGIONFE', keep(1 3) keepus(regionfe subregionfe) nogen 
 merge 1:1 year iso using `GDP', keep(1 3) nogen 
+merge 1:1 year iso using `HDINDEX', keep(1 3) nogen 
 
 la var va_index "Voice and Accountability Index (WB)"
+la var cc_index "Control of Corruption Index (WB)"
 la var ida_index "IDA Resource Allocation Index (WB)"
 la var accountability_index "Accountability Index (VDEM)"
 la var vertical_index "Vertical Accountability Index (VDEM)"

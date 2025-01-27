@@ -154,6 +154,7 @@ gr export "${plots}/fig2c_${yvar}_${xvar}.pdf", as(pdf) replace
 *-------------------------------------------------------------------------------
 * Set globals for your variables and condition
 global yvar = "va_vdemcore"
+global xvar = "ln_gdp"
 
 preserve
 	keep if ${condition}
@@ -201,6 +202,7 @@ gr export "${plots}/fig3c_${yvar}_${xvar}.pdf", as(pdf) replace
 *-------------------------------------------------------------------------------
 * Set globals for your variables and condition
 global yvar = "ha_vdemcore"
+global xvar = "ln_gdp"
 
 preserve
 	keep if ${condition}
@@ -248,6 +250,7 @@ gr export "${plots}/fig4c_${yvar}_${xvar}.pdf", as(pdf) replace
 *-------------------------------------------------------------------------------
 * Set globals for your variables and condition
 global yvar = "da_vdemcore"
+global xvar = "ln_gdp"
 
 preserve
 	keep if ${condition}
@@ -322,9 +325,13 @@ gr export "${plots}/fig8_${yvar}_${xvar}.pdf", as(pdf) replace
 *-------------------------------------------------------------------------------
 * Figure 9
 *-------------------------------------------------------------------------------
-la var vdem_index "Regime Classification Index (VDEM)"
+*Creating lack of electoral integrity 
+gen d_q224=1-d_q224_inv
 
-global yvar = "d_q224_inv"
+la var vdem_index "Regime Classification Index (VDEM)"
+la var d_q224 "Lack of Electoral Integrity (WVS)"
+
+global yvar = "d_q224"
 global xvar = "vdem_index"
 
 two (qfitci ${yvar} ${xvar}) (scatter ${yvar} ${xvar}, mlabel(iso) mlabcolor(black) mcolor(%95 black) msize(*.7) mlabsize(vsmall) mlabsize(*.6) msymbol(Oh)), /// 
@@ -424,6 +431,19 @@ global xvar = "cc_index"
 * Call the program
 make_plot, yvar(${yvar}) xvar(${xvar}) condition(${condition}) tposition(1)
 gr export "${plots}/fig17_${yvar}_${xvar}.pdf", as(pdf) replace
+
+*-------------------------------------------------------------------------------
+* Figure 18
+*-------------------------------------------------------------------------------
+la var vdem_index "Regime Classification Index (VDEM)"
+
+* Set globals for your variables and condition
+global yvar = "wjpruleoflawindexoveralls"
+global xvar = "vdem_index"
+
+* Call the program
+make_plot, yvar(${yvar}) xvar(${xvar}) condition(${condition}) tposition(1)
+gr export "${plots}/fig18_${yvar}_${xvar}.pdf", as(pdf) replace
 
 
 

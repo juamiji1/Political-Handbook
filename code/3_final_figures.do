@@ -403,7 +403,7 @@ gr export "${plots}/fig14_${yvar}_${xvar}.pdf", as(pdf) replace
 * Figure 15
 *-------------------------------------------------------------------------------
 * Set globals for your variables and condition
-global yvar = "pf_index"
+global yvar = "wjpruleoflawindexoveralls"
 global xvar = "ha_vdemcore"
 
 * Call the program
@@ -444,6 +444,20 @@ global xvar = "vdem_index"
 * Call the program
 make_plot, yvar(${yvar}) xvar(${xvar}) condition(${condition}) tposition(1)
 gr export "${plots}/fig18_${yvar}_${xvar}.pdf", as(pdf) replace
+
+*-------------------------------------------------------------------------------
+* Figure 19
+*-------------------------------------------------------------------------------
+* Set globals for your variables and condition
+global yvar = "a_vdemcore"
+global xvar = "ln_gdp"
+global condition = "year==2022 & vdem_index>.42"
+
+* Call the program
+make_plot, yvar(${yvar}) xvar(${xvar}) condition(${condition}) tposition(1)
+gr export "${plots}/fig19_${yvar}_${xvar}.pdf", as(pdf) replace
+
+
 
 
 

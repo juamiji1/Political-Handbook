@@ -46,9 +46,9 @@ program define make_plot
 	
 	else {
 		qui summ `yvar' if `condition', d
-		local ycoord = r(min)
+		local ycoord = r(min)+.3*r(sd)
 		local ymin = r(min)
-		local ymax = r(max)
+		local ymax = r(max) 
 		
 		qui summ `xvar' if `condition', d
 		local xcoord = r(min)+.5*r(sd)
@@ -514,15 +514,15 @@ foreach xvar of global xvars {
 *-------------------------------------------------------------------------------
 * Set globals for your variables and condition
 global yvar = "d_q1135"
-global condition = "d_q1135!=."
+global condition = "d_q1135!=. & vdem_index>.42"
 
 * Call the program
 foreach xvar of global xvars {
 
 	gl xvar = "`xvar'"
 	
-	*make_plot, yvar(${yvar}) xvar(`xvar') condition(${condition}) tposition(1)
-	two (qfitci ${yvar} ${xvar} if ${condition}) (scatter ${yvar} ${xvar} if ${condition}, mlabel(iso) mlabcolor(black) mcolor(%95 black) msize(*.7) mlabsize(vsmall) mlabsize(*.6) msymbol(Oh)), /// 
+	make_plot, yvar(${yvar}) xvar(`xvar') condition(${condition}) tposition(2)
+	*two (lfitci ${yvar} ${xvar} if ${condition}) (scatter ${yvar} ${xvar} if ${condition}, mlabel(iso) mlabcolor(black) mcolor(%95 black) msize(*.7) mlabsize(vsmall) mlabsize(*.6) msymbol(Oh)), /// 
 legend(off) b2title("`: variable label ${xvar}'", size(medsmall)) ytitle("`: variable label ${yvar}'", size(medsmall)) xtitle("")
 	gr export "${plots}/fig_${yvar}_`xvar'.pdf", as(pdf) replace
 

@@ -64,15 +64,34 @@ program define make_plot
 	
 end
 
+
+*-------------------------------------------------------------------------------
+* Figure 0
+*-------------------------------------------------------------------------------
+use "${idata}\wjp_wb_vhda_13_24_country_lvl.dta", clear
+
+la var ln_gdp "Log of GDP Per Capita (WB)"
+
+* Set globals for your variables and condition
+gl yvars "a_vdemcore va_vdemcore ha_vdemcore da_vdemcore"
+global xvar = "ln_gdp"
+global condition = "year==2022 & vdem_index>.42"
+
+foreach yvar of global yvars{
+	
+	* Call the program
+	make_plot, yvar(`yvar') xvar(${xvar}) condition(${condition}) tposition(1)
+	gr export "${plots}/fig0_`yvar'_${xvar}.pdf", as(pdf) replace
+	
+}
+
 *-------------------------------------------------------------------------------
 * Figure 1a
 *-------------------------------------------------------------------------------
-use "${idata}\wjp_wb_vhda_13_24_country_lvl.dta", clear
 
 * Set globals for your variables and condition
 global yvar = "cc_index"
 global xvar = "a_vdemcore"
-global condition = "year==2022 & vdem_index>.42"
 
 * Call the program
 make_plot, yvar(${yvar}) xvar(${xvar}) condition(${condition}) tposition(1)
@@ -333,8 +352,9 @@ la var d_q224 "Lack of Electoral Integrity (WVS)"
 
 global yvar = "d_q224"
 global xvar = "vdem_index"
+global condition ="d_q224!=."
 
-two (qfitci ${yvar} ${xvar}) (scatter ${yvar} ${xvar}, mlabel(iso) mlabcolor(black) mcolor(%95 black) msize(*.7) mlabsize(vsmall) mlabsize(*.6) msymbol(Oh)), /// 
+two (qfitci ${yvar} ${xvar} if ${condition}) (scatter ${yvar} ${xvar} if ${condition}, mlabel(iso) mlabcolor(black) mcolor(%95 black) msize(*.7) mlabsize(vsmall) mlabsize(*.6) msymbol(Oh)), /// 
 legend(off) b2title("`: variable label ${xvar}'", size(medsmall)) ytitle("`: variable label ${yvar}'", size(medsmall)) xtitle("")
 gr export "${plots}/fig9_${yvar}_${xvar}.pdf", as(pdf) replace
 
@@ -344,8 +364,9 @@ gr export "${plots}/fig9_${yvar}_${xvar}.pdf", as(pdf) replace
 la var d_q227_inv "Voters are Bribed (Share)"
 
 global yvar = "d_q227_inv"
+global condition ="d_q227_inv!=."
 
-two (qfitci ${yvar} ${xvar}) (scatter ${yvar} ${xvar}, mlabel(iso) mlabcolor(black) mcolor(%95 black) msize(*.7) mlabsize(vsmall) mlabsize(*.6) msymbol(Oh)), /// 
+two (qfitci ${yvar} ${xvar} if ${condition}) (scatter ${yvar} ${xvar} if ${condition}, mlabel(iso) mlabcolor(black) mcolor(%95 black) msize(*.7) mlabsize(vsmall) mlabsize(*.6) msymbol(Oh)), /// 
 legend(off) b2title("`: variable label ${xvar}'", size(medsmall)) ytitle("`: variable label ${yvar}'", size(medsmall)) xtitle("")
 gr export "${plots}/fig10_${yvar}_${xvar}.pdf", as(pdf) replace
 
@@ -355,8 +376,9 @@ gr export "${plots}/fig10_${yvar}_${xvar}.pdf", as(pdf) replace
 la var d_q231_inv "Voters are Threathened (Share)"
 
 global yvar = "d_q231_inv"
+global condition ="d_q231_inv!=."
 
-two (qfitci ${yvar} ${xvar}) (scatter ${yvar} ${xvar}, mlabel(iso) mlabcolor(black) mcolor(%95 black) msize(*.7) mlabsize(vsmall) mlabsize(*.6) msymbol(Oh)), /// 
+two (qfitci ${yvar} ${xvar} if ${condition}) (scatter ${yvar} ${xvar} if ${condition}, mlabel(iso) mlabcolor(black) mcolor(%95 black) msize(*.7) mlabsize(vsmall) mlabsize(*.6) msymbol(Oh)), /// 
 legend(off) b2title("`: variable label ${xvar}'", size(medsmall)) ytitle("`: variable label ${yvar}'", size(medsmall)) xtitle("")
 gr export "${plots}/fig11_${yvar}_${xvar}.pdf", as(pdf) replace
 
@@ -449,18 +471,62 @@ gr export "${plots}/fig18_${yvar}_${xvar}.pdf", as(pdf) replace
 * Figure 19
 *-------------------------------------------------------------------------------
 * Set globals for your variables and condition
-global yvar = "a_vdemcore"
-global xvar = "ln_gdp"
-global condition = "year==2022 & vdem_index>.42"
+global yvar = "pf_index"
 
 * Call the program
 make_plot, yvar(${yvar}) xvar(${xvar}) condition(${condition}) tposition(1)
 gr export "${plots}/fig19_${yvar}_${xvar}.pdf", as(pdf) replace
 
+*-------------------------------------------------------------------------------
+* Figure 20
+*-------------------------------------------------------------------------------
+use "${idata}\wvs_series_gdp_country_year_lvl.dta", clear 
 
+bys iso: egen max_year=max(year)
+keep if max_year==year
 
+merge 1:1 iso year using "${idata}\wjp_wb_vhda_13_24_country_lvl.dta", keep(1 3) keepus(wjpruleoflawindexoveralls pf_index a_vdemcore) nogen 
 
+gen vdem_regime_v2=vdem_regime
+replace vdem_regime_v2=1 if vdem_regime_v2==0
 
+la var vdem_index "Regime Classification Index (VDEM)"
+
+* Set globals for your variables and condition
+global xvars "vdem_index ln_gdp pf_index a_vdemcore"
+global yvar = "d_q292"
+global condition = "d_q292!=."
+
+* Call the program
+foreach xvar of global xvars {
+	
+	gl xvar = "`xvar'"
+	
+	two (lfitci ${yvar} ${xvar} if ${condition}, ciplot(rarea)) /// 
+    (scatter ${yvar} ${xvar} if ${condition}, mlabel(iso) mlabcolor(black) mcolor(%95 black) msize(*.7) mlabsize(vsmall) mlabsize(*.6) msymbol(Oh)), ///
+    legend(off) b2title("`: variable label ${xvar}'", size(medsmall)) ytitle("`: variable label ${yvar}'", size(medsmall)) xtitle("")
+	gr export "${plots}/fig_${yvar}_`xvar'.pdf", as(pdf) replace
+	
+}
+
+*-------------------------------------------------------------------------------
+* Figure 21
+*-------------------------------------------------------------------------------
+* Set globals for your variables and condition
+global yvar = "d_q1135"
+global condition = "d_q1135!=."
+
+* Call the program
+foreach xvar of global xvars {
+
+	gl xvar = "`xvar'"
+	
+	*make_plot, yvar(${yvar}) xvar(`xvar') condition(${condition}) tposition(1)
+	two (qfitci ${yvar} ${xvar} if ${condition}) (scatter ${yvar} ${xvar} if ${condition}, mlabel(iso) mlabcolor(black) mcolor(%95 black) msize(*.7) mlabsize(vsmall) mlabsize(*.6) msymbol(Oh)), /// 
+legend(off) b2title("`: variable label ${xvar}'", size(medsmall)) ytitle("`: variable label ${yvar}'", size(medsmall)) xtitle("")
+	gr export "${plots}/fig_${yvar}_`xvar'.pdf", as(pdf) replace
+
+}
 
 
 *END

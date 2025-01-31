@@ -199,16 +199,17 @@ foreach var of global account {
 	gen d_`var'=(`var'>3) if `var'!=.
 }
 
-gen d_q292 = 1 if q292a>3 & q292a!=.
-replace d_q292 = 1 if q292b>3 & q292b!=.
-replace d_q292 = 1 if q292c<3 & q292c!=.
-replace d_q292 = 1 if q292g<3 & q292g!=.
-replace d_q292 = 1 if q292i>3 & q292i!=.
-replace d_q292 = 1 if q292j>3 & q292j!=.
-replace d_q292 = 1 if q292k>3 & q292k!=.
-replace d_q292 = 1 if q292l>3 & q292l!=.
+*gen d_q292 = 1 if q292a>3 & q292a!=.
+*replace d_q292 = 1 if q292b>3 & q292b!=.
+*replace d_q292 = 1 if q292c<3 & q292c!=.
+*replace d_q292 = 1 if q292g<3 & q292g!=.
+*replace d_q292 = 1 if q292i>3 & q292i!=.
+gen d_q292 = 1 if q292j>3 & q292j!=.
+replace d_q292 = 1 if q292k<=3 & q292k!=.
+*replace d_q292 = 1 if q292l>3 & q292l!=.
 replace d_q292 = 0 if d_q292==. 
-replace d_q292 = . if q292a==. & q292b==. & q292c==. & q292g==. & q292i==. & q292j==. & q292k==. & q292l==. 
+replace d_q292 = . if q292k==. & q292j
+*q292a==. & q292b==. & q292c==. & q292g==. & q292i==. & 
 
 *-------------------------------------------------------------------------------
 *	COLLAPSING DATA ATT COUNTRY (WEIGHTING)

@@ -225,6 +225,37 @@ la var hd_index "Human Development Index (UNDP)"
 tempfile HDINDEX
 save `HDINDEX', replace 
 
+*Harmonized Learning Outcomes Scores (WB)
+import delimited "${rdata}\WB\average-harmonized-learning-outcome-scores.csv", clear
+
+keep if code!=""
+ren (code harmonizedtestscores) (iso hlo_index)
+
+la var hlo_index "Harmonized Learning Outcomes Score (WB)"
+
+tempfile HLOINDEX
+save `HLOINDEX', replace 
+
+*Turnout (VDEM)
+import delimited "${rdata}\Vdem\voter-turnout-of-registered-voters.csv", clear
+ren (code voterturnoutofregisteredvoters) (iso turnout_vdemcore)
+
+drop if iso==""
+keep if year >1979
+keep iso year turnout_vdemcore
+
+la var turnout_vdemcore "% Turnout (VDEM)"
+
+encode iso, gen(iso_code)
+tsset iso_code year 
+tsfill, full 
+
+by iso_code: carryforward iso turnout_vdemcore, replace
+drop if turnout_vdemcore==.
+
+tempfile VDEMTURN
+save `VDEMTURN', replace 
+
 *-------------------------------------------------------------------------------
 *Merging everything together
 *
@@ -243,6 +274,8 @@ merge 1:1 year iso using `VDEMINDEX2', keep(1 3) keepus(vdem_index) nogen
 merge m:1 iso using `REGIONFE', keep(1 3) keepus(regionfe subregionfe) nogen 
 merge 1:1 year iso using `GDP', keep(1 3) nogen 
 merge 1:1 year iso using `HDINDEX', keep(1 3) nogen 
+merge 1:1 year iso using `HLOINDEX', keep(1 3) nogen 
+merge 1:1 year iso using `VDEMTURN', keep(1 3) keepus(turnout_vdemcore) nogen 
 
 la var va_index "Voice and Accountability Index (WB)"
 la var cc_index "Control of Corruption Index (WB)"

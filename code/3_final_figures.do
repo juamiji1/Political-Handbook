@@ -477,7 +477,43 @@ global yvar = "pf_index"
 make_plot, yvar(${yvar}) xvar(${xvar}) condition(${condition}) tposition(1)
 gr export "${plots}/fig19_${yvar}_${xvar}.pdf", as(pdf) replace
 
+
 *-------------------------------------------------------------------------------
+* Other Figures (not a must)
+*-------------------------------------------------------------------------------
+use "${idata}\wjp_wb_vhda_13_24_country_lvl.dta", clear
+
+* Set globals for your variables and condition
+global yvar = "hlo_index"
+global xvars "a_vdemcore va_vdemcore ha_vdemcore da_vdemcore"
+global condition = "year==2020 & vdem_index>.42"
+
+foreach xvar of global xvars {
+	
+	gl xvar = "`xvar'"
+	
+	make_plot, yvar(${yvar}) xvar(${xvar}) condition(${condition}) tposition(1)
+	gr export "${plots}/figN_${yvar}_`xvar'.pdf", as(pdf) replace
+	
+}
+
+global xvars "cc_index wjpruleoflawindexoveralls turnout_vdemcore"
+
+foreach xvar of global xvars {
+	
+	gl xvar = "`xvar'"
+	
+	make_plot, yvar(${yvar}) xvar(${xvar}) condition(${condition}) tposition(1)
+	gr export "${plots}/figN_${yvar}_`xvar'.pdf", as(pdf) replace
+	
+}
+
+gl xvar = "c_vdemcore"
+
+make_plot, yvar(${yvar}) xvar(${xvar}) condition(${condition}) tposition(2)
+gr export "${plots}/figN_${yvar}_${xvar}.pdf", as(pdf) replace
+
+/*-------------------------------------------------------------------------------
 * Figure 20
 *-------------------------------------------------------------------------------
 use "${idata}\wvs_series_gdp_country_year_lvl.dta", clear 

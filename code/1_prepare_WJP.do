@@ -236,6 +236,17 @@ la var hlo_index "Harmonized Learning Outcomes Score (WB)"
 tempfile HLOINDEX
 save `HLOINDEX', replace 
 
+*Infant Mortality (WB)
+import delimited "${rdata}\WB\infant-mortality.csv", clear
+
+keep if code!=""
+ren (code observationvalueindicatorinfantm) (iso im_rate)
+
+la var im_rate "Infant Mortality Rate (WB)"
+
+tempfile IMRATE
+save `IMRATE', replace 
+
 *Turnout (VDEM)
 import delimited "${rdata}\Vdem\voter-turnout-of-registered-voters.csv", clear
 ren (code voterturnoutofregisteredvoters) (iso turnout_vdemcore)
@@ -276,6 +287,7 @@ merge 1:1 year iso using `GDP', keep(1 3) nogen
 merge 1:1 year iso using `HDINDEX', keep(1 3) nogen 
 merge 1:1 year iso using `HLOINDEX', keep(1 3) nogen 
 merge 1:1 year iso using `VDEMTURN', keep(1 3) keepus(turnout_vdemcore) nogen 
+merge 1:1 year iso using `IMRATE', keep(1 3) nogen 
 
 la var va_index "Voice and Accountability Index (WB)"
 la var cc_index "Control of Corruption Index (WB)"

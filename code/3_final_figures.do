@@ -513,6 +513,23 @@ gl xvar = "c_vdemcore"
 make_plot, yvar(${yvar}) xvar(${xvar}) condition(${condition}) tposition(2)
 gr export "${plots}/figN_${yvar}_${xvar}.pdf", as(pdf) replace
 
+
+* Set globals for your variables and condition
+global yvar = "im_rate"
+global xvars "a_vdemcore va_vdemcore ha_vdemcore da_vdemcore cc_index wjpruleoflawindexoveralls c_vdemcore turnout_vdemcore"
+global condition = "year==2022 & vdem_index>.42"
+
+foreach xvar of global xvars {
+	
+	gl xvar = "`xvar'"
+	
+	two (lfitci ${yvar} ${xvar} if ${condition}) (scatter ${yvar} ${xvar} if ${condition}, mlabel(iso) mlabcolor(black) mcolor(%95 black) msize(*.7) mlabsize(vsmall) mlabsize(*.6) msymbol(Oh)), /// 
+legend(off) b2title("`: variable label ${xvar}'", size(medsmall)) ytitle("`: variable label ${yvar}'", size(medsmall)) xtitle("")
+	gr export "${plots}/figN_${yvar}_`xvar'.pdf", as(pdf) replace
+	
+}
+
+
 /*-------------------------------------------------------------------------------
 * Figure 20
 *-------------------------------------------------------------------------------

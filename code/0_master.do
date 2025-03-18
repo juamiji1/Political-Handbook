@@ -11,7 +11,7 @@ clear all
 
 *Setting directories 
 if c(username) == "juami" {
-	gl localpath "C:\Users/`c(username)'\Dropbox\1-Political-Claudio-Project"
+	gl localpath "C:\Users/`c(username)'\Dropbox\RAships\1-Political-Claudio-Project"
 	gl overleafpath "C:\Users/`c(username)'\Dropbox\Overleaf\Claudio-Handbook"
 	gl code "C:\Github\Political-Handbook\code"
 	
